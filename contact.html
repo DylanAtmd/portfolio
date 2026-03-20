@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script>
+        (function () {
+            var t = localStorage.getItem('kb-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <title>Contact — Votre Nom</title>
+    <meta name="description" content="Contactez Votre Nom — disponible pour CDI en cybersécurité à partir de 2029.">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root { --green: #00ff88; --red: #ff4d6d; --yellow: #ffc107; }
+        .section { padding: 60px 2rem 100px; }
+        .contact-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: start; }
+        .form-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 2.5rem; position: relative; overflow: hidden; }
+        .form-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); }
+        .form-card-title { font-family: var(--font-display); font-size: 2rem; letter-spacing: 0.04em; margin-bottom: 0.4rem; }
+        .form-card-sub   { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 2rem; }
+        .form-alert { padding: 0.85rem 1rem; border-radius: 6px; margin-bottom: 1.5rem; display: none; align-items: center; gap: 0.75rem; font-size: 0.85rem; font-family: var(--font-mono); }
+        .form-alert.show    { display: flex; }
+        .form-alert.success { background: rgba(0,255,136,0.06); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+        .form-alert.error   { background: rgba(255,77,109,0.06); color: var(--red);   border: 1px solid rgba(255,77,109,0.25); }
+        .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .form-group label span { color: var(--text-dim); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.8rem 1rem; background: var(--bg2); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: var(--font-body); font-size: 0.875rem; transition: border-color 0.2s, box-shadow 0.2s; appearance: none; -webkit-appearance: none; }
+        .form-group select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7f94' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.85rem center; padding-right: 2.5rem; }
+        .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-dim); }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(0,212,255,0.08); }
+        .form-group input.invalid, .form-group textarea.invalid, .form-group select.invalid { border-color: rgba(255,77,109,0.5); }
+        .form-group input.valid,   .form-group textarea.valid,   .form-group select.valid   { border-color: rgba(0,255,136,0.3); }
+        .field-error { font-family: var(--font-mono); font-size: 0.62rem; color: var(--red); margin-top: 0.35rem; display: none; }
+        .field-error.show { display: block; }
+        .form-group textarea { resize: vertical; min-height: 130px; line-height: 1.6; }
+        .char-row { display: flex; justify-content: flex-end; margin-top: 0.3rem; }
+        .char-counter { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-dim); }
+        .char-counter.warn { color: var(--yellow); }
+        .char-counter.over { color: var(--red); }
+        .submit-btn { width: 100%; padding: 0.9rem 2rem; background: var(--accent); border: none; border-radius: 6px; color: var(--bg); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin-top: 0.5rem; }
+        .submit-btn:hover:not(:disabled) { background: #33ddff; box-shadow: 0 6px 24px rgba(0,212,255,0.35); transform: translateY(-2px); }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .info-col { display: flex; flex-direction: column; gap: 1.25rem; }
+        .info-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 1.75rem; transition: border-color 0.3s; }
+        .info-card:hover { border-color: var(--border); }
+        .info-card-title { font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dim); margin-bottom: 1.25rem; }
+        .contact-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border2); }
+        .contact-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .contact-icon { width: 36px; height: 36px; flex-shrink: 0; background: var(--accent-glow); border: 1px solid var(--border); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 0.85rem; }
+        .contact-details h3 { font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 0.2rem; }
+        .contact-details p  { font-size: 0.875rem; color: var(--text-muted); }
+        .contact-details a  { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .contact-details a:hover { color: var(--accent); }
+        .avail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; position: relative; overflow: hidden; }
+        .avail-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 20%, rgba(0,212,255,0.06), transparent 60%); pointer-events: none; }
+        .avail-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem; }
+        .dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: glow 2s infinite; }
+        @keyframes glow { 0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,0.4)} 50%{box-shadow:0 0 0 6px rgba(0,255,136,0)} }
+        .avail-header span { font-family: var(--font-mono); font-size: 0.7rem; color: var(--green); letter-spacing: 0.1em; text-transform: uppercase; }
+        .avail-rows { display: flex; flex-direction: column; gap: 0.6rem; }
+        .avail-row  { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.85rem; color: var(--text-muted); }
+        .avail-row i { color: var(--accent); font-size: 0.8rem; margin-top: 0.15rem; flex-shrink: 0; width: 14px; }
+        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .social-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 0.85rem; transition: all 0.2s; }
+        .social-item:hover { border-color: var(--border); color: var(--accent); background: var(--surface); transform: translateY(-2px); }
+        .social-item i    { font-size: 1.1rem; flex-shrink: 0; }
+        .social-item span { font-size: 0.82rem; }
+        @media (max-width: 900px) { .contact-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .social-grid { grid-template-columns: 1fr; } }
+        /* reCAPTCHA badge discret */
+        .recaptcha-notice { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim); margin-top: 0.75rem; text-align: center; line-height: 1.5; }
+        .recaptcha-notice a { color: var(--text-dim); text-decoration: underline; transition: color 0.2s; }
+        .recaptcha-notice a:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <header id="header">
+        <nav>
+            <a href="index.html" class="logo">Votre Nom</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="projets.html">Projets</a></li>
+                <li><a href="realisations.html">Réalisations</a></li>
+                <li><a href="veille.html">Veille</a></li>
+                <li><a href="contact.html" class="active">Contact</a></li>
+                <li><button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button></li>
+            </ul>
+            <div class="burger" id="burger"><span></span><span></span><span></span></div>
+        </nav>
+    </header>
+
+    <div class="page-hero">
+        <div class="page-hero-inner">
+            <div class="breadcrumb">
+                <a href="index.html">Accueil</a><span>/</span><span>Contact</span>
+            </div>
+            <h1>Me<br>Contacter</h1>
+            <p>Disponible pour toute opportunité de CDI ou collaboration. Je réponds généralement sous 24h.</p>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <div class="contact-grid reveal">
+                <div class="form-card">
+                    <h2 class="form-card-title">Envoyer un message</h2>
+                    <p class="form-card-sub">// Réponse sous 24h garantie</p>
+                    <div class="form-alert success" id="successAlert"><i class="fas fa-check-circle"></i> Message envoyé avec succès !</div>
+                    <div class="form-alert error"   id="errorAlert"><i class="fas fa-exclamation-triangle"></i> Erreur d'envoi. Contactez-moi directement par email.</div>
+                    <form id="contactForm" novalidate>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Nom complet *</label>
+                                <input type="text" id="name" name="name" placeholder="Jean Dupont" autocomplete="name">
+                                <div class="field-error" id="name-err">Minimum 2 caractères requis.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Adresse email *</label>
+                                <input type="email" id="email" name="email" placeholder="jean@exemple.com" autocomplete="email">
+                                <div class="field-error" id="email-err">Email invalide.</div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="subject">Sujet *</label>
+                                <select id="subject" name="subject">
+                                    <option value="">Choisir un sujet…</option>
+                                    <option>CDI / CDD</option>
+                                    <option>Proposition d'alternance</option>
+                                    <option>Collaboration</option>
+                                    <option>Demande de conseil</option>
+                                    <option>Autre</option>
+                                </select>
+                                <div class="field-error" id="subject-err">Veuillez choisir un sujet.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="company">Entreprise <span>(optionnel)</span></label>
+                                <input type="text" id="company" name="company" placeholder="Nom de votre entreprise" autocomplete="organization">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message *</label>
+                            <textarea id="message" name="message" placeholder="Décrivez votre demande…" maxlength="1000"></textarea>
+                            <div class="char-row"><span class="char-counter" id="charCounter">0 / 1000</span></div>
+                            <div class="field-error" id="message-err">Minimum 10 caractères requis.</div>
+                        </div>
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> Envoyer le message
+                        </button>
+                        <p class="recaptcha-notice">
+                            Protégé par reCAPTCHA &mdash;
+                            <a href="https://policies.google.com/privacy" target="_blank">Confidentialité</a> &amp;
+                            <a href="https://policies.google.com/terms" target="_blank">Conditions</a>
+                        </p>
+                    </form>
+                </div>
+
+                <div class="info-col">
+                    <div class="info-card reveal">
+                        <p class="info-card-title">// Coordonnées</p>
+                        <div class="contact-item">
+                            <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                            <div class="contact-details"><h3>Email</h3><p><a href="javascript:void(0)" href="mailto:votre.email@gmail.com">votre.email@gmail.com</a></p></div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="contact-details"><h3>Localisation</h3><p>Votre Ville — Mobilité Votre Région</p></div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon"><i class="fas fa-clock"></i></div>
+                            <div class="contact-details"><h3>Disponibilité</h3><p>Lun — Ven &middot; 9h – 18h &middot; Réponse sous 24h</p></div>
+                        </div>
+                    </div>
+                    <div class="avail-card reveal">
+                        <div class="avail-header"><div class="dot-green"></div><span>Statut — Disponible</span></div>
+                        <div class="avail-rows">
+                            <div class="avail-row"><i class="fas fa-graduation-cap"></i><span>Étudiant BACHELOR AIS — École VOTRE_ECOLE</span></div>
+                            <div class="avail-row"><i class="fas fa-calendar-alt"></i><span>Fin de formation prévue en Septembre 2029</span></div>
+                            <div class="avail-row"><i class="fas fa-briefcase"></i><span>Ouvert aux opportunités CDI pour 2029</span></div>
+                            <div class="avail-row"><i class="fas fa-map-marker-alt"></i><span>Disponible en Votre Région</span></div>
+                        </div>
+                    </div>
+                    <div class="info-card reveal">
+                        <p class="info-card-title">// Retrouvez-moi sur</p>
+                        <div class="social-grid">
+                            <a href="https://www.linkedin.com/in/VOTRE_PROFIL_LINKEDIN/" target="_blank" class="social-item"><i class="fab fa-linkedin" style="color:#0a8fd1"></i><span>LinkedIn</span></a>
+                            <a href="https://github.com/VOTRE_GITHUB" target="_blank" class="social-item"><i class="fab fa-github" style="color:#aaa"></i><span>GitHub</span></a>
+                            <a href="mailto:votre.email@gmail.com" class="social-item"><i class="fas fa-envelope" style="color:var(--accent)"></i><span>Email direct</span></a>
+                            <a href="CV_VOTRE_NOM.pdf" download class="social-item"><i class="fas fa-file-pdf" style="color:#ff4444"></i><span>Télécharger CV</span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="logo-big">Votre Nom</div>
+                    <p>Étudiant en BACHELOR AIS, passionné par les systèmes, réseaux et la cybersécurité. Disponible pour CDI en Cybersécurité à partir de 2029.</p>
+                    <div class="footer-social">
+                        <a href="https://www.linkedin.com/in/VOTRE_PROFIL_LINKEDIN/" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://github.com/VOTRE_GITHUB" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="contact.html" class="social-btn" title="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col"><h4>Navigation</h4><a href="index.html">Accueil</a><a href="projets.html">Projets</a><a href="realisations.html">Réalisations</a><a href="veille.html">Veille</a><a href="contact.html">Contact</a></div>
+                <div class="footer-col"><h4>Compétences</h4><a href="realisations.html#systeme">Admin. Système</a><a href="realisations.html#reseau">Admin. Réseau</a><a href="realisations.html#securite">Cybersécurité</a><a href="realisations.html#cloud">Cloud</a><a href="realisations.html#dev">Automatisation</a></div>
+                <div class="footer-col"><h4>Contact</h4><a href="https://www.linkedin.com/in/VOTRE_PROFIL_LINKEDIN/">LinkedIn</a><a href="https://github.com/VOTRE_GITHUB">GitHub</a><a href="contact.html">Formulaire</a></div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Votre Nom — Portfolio BACHELOR AIS</p>
+                <p>Tous droits réservés</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=VOTRE_RECAPTCHA_SITE_KEY" async defer></script>
+    <script src="js/main.js"></script>
+    <script>
+        /* ======================================================
+           CONTACT — Config
+           1. Remplace par tes identifiants EmailJS
+           2. Remplace VOTRE_RECAPTCHA_SITE_KEY par ta clé reCAPTCHA v3
+              (obtenir sur https://www.google.com/recaptcha/admin)
+        ====================================================== */
+        var EJS_PUBLIC_KEY      = 'VOTRE_PUBLIC_KEY';
+        var EJS_SERVICE_ID      = 'VOTRE_SERVICE_ID';
+        var EJS_TEMPLATE_ID     = 'VOTRE_TEMPLATE_ID';
+        var RECAPTCHA_SITE_KEY  = 'VOTRE_RECAPTCHA_SITE_KEY';
+        var RECAPTCHA_MIN_SCORE = 0.5; // Score minimum (0.0 = bot, 1.0 = humain)
+
+        emailjs.init(EJS_PUBLIC_KEY);
+
+        function getEl(id) { return document.getElementById(id); }
+
+        function setField(id, ok, msg) {
+            var el = getEl(id), err = getEl(id + '-err');
+            el.classList.toggle('valid', ok); el.classList.toggle('invalid', !ok);
+            if (!ok && msg) { err.textContent = msg; err.classList.add('show'); }
+            else { err.classList.remove('show'); }
+            return ok;
+        }
+        function clearField(id) { getEl(id).classList.remove('valid','invalid'); getEl(id+'-err').classList.remove('show'); }
+
+        var V = {
+            name:    function(v){ return v.trim().length >= 2; },
+            email:   function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); },
+            subject: function(v){ return v !== ''; },
+            message: function(v){ return v.trim().length >= 10; }
+        };
+        var E = { name:'Minimum 2 caractères.', email:'Email invalide.', subject:'Choisir un sujet.', message:'Minimum 10 caractères.' };
+
+        function vField(id) { var v = getEl(id).value; return setField(id, V[id](v), E[id]); }
+        function vAll()  { return ['name','email','subject','message'].map(vField).every(Boolean); }
+
+        ['name','email','subject','message'].forEach(function(id){
+            var el = getEl(id);
+            el.addEventListener('blur',  function(){ if(el.value) vField(id); });
+            el.addEventListener('input', function(){ if(el.classList.contains('invalid')||el.classList.contains('valid')) vField(id); });
+        });
+
+        var msg = getEl('message'), cc = getEl('charCounter');
+        msg.addEventListener('input', function(){
+            var l = msg.value.length;
+            cc.textContent = l + ' / 1000';
+            cc.className = 'char-counter' + (l > 900 ? ' over' : l > 750 ? ' warn' : '');
+        });
+
+        function showAlert(type) {
+            getEl('successAlert').classList.remove('show');
+            getEl('errorAlert').classList.remove('show');
+            if (type) getEl(type + 'Alert').classList.add('show');
+        }
+
+        getEl('contactForm').addEventListener('submit', function(e){
+            e.preventDefault(); showAlert(null);
+            if (!vAll()) { var f = this.querySelector('.invalid'); if(f) f.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+            var btn = getEl('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification anti-spam…';
+
+            /* ── Attend que reCAPTCHA soit prêt, puis envoie ── */
+            grecaptcha.ready(function() {
+                grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'contact_form' })
+                .then(function(token) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours…';
+                    return emailjs.send(EJS_SERVICE_ID, EJS_TEMPLATE_ID, {
+                        name:            getEl('name').value.trim(),
+                        email:           getEl('email').value.trim(),
+                        from_name:       getEl('name').value.trim(),
+                        from_email:      getEl('email').value.trim(),
+                        subject:         getEl('subject').value,
+                        company:         getEl('company').value.trim() || 'Non renseigné',
+                        message:         getEl('message').value.trim(),
+                        reply_to:        getEl('email').value.trim(),
+                        recaptcha_token: token
+                    });
+                })
+                .then(function(res) {
+                    if (res.status === 200) {
+                        showAlert('success'); getEl('contactForm').reset();
+                        cc.textContent = '0 / 1000'; cc.className = 'char-counter';
+                        ['name','email','subject','message'].forEach(clearField);
+                        setTimeout(function(){ showAlert(null); }, 8000);
+                    } else { throw new Error('Status ' + res.status); }
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer le message';
+                })
+                .catch(function(err) {
+                    console.error('Erreur envoi:', err);
+                    showAlert('error');
+                    setTimeout(function(){ showAlert(null); }, 10000);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer le message';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script>
+        (function () {
+            var t = localStorage.getItem('kb-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+
+    <title>Projets — Votre Nom</title>
+    <meta name="description" content="Mes projets techniques : Home-Lab, NextCloud, Windows Server 2022, Apache, Bitwarden. Réalisés dans le cadre du BACHELOR AIS.">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* ── STATUS COLORS ───────────── */
+        .status-completed { background: rgba(0,255,136,0.08); color: #00ff88; border: 1px solid rgba(0,255,136,0.25); }
+        .status-progress  { background: rgba(255,193,7,0.08);  color: #ffc107; border: 1px solid rgba(255,193,7,0.25); }
+        .status-planned   { background: rgba(108,117,125,0.08);color: #6c757d; border: 1px solid rgba(108,117,125,0.25); }
+
+        /* ── SECTION ─────────────────── */
+        .section { padding: 60px 2rem 100px; }
+
+        /* ── FILTERS ─────────────────── */
+        .filters {
+            display: flex; gap: 0.5rem; flex-wrap: wrap;
+            margin-bottom: 3rem;
+            opacity: 0; animation: fadeUp 0.6s 0.45s forwards;
+        }
+        .filter-btn {
+            font-family:    var(--font-mono);
+            font-size:      0.68rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding:        0.55rem 1.1rem;
+            background:     var(--surface);
+            border:         1px solid var(--border2);
+            border-radius:  4px;
+            color:          var(--text-muted);
+            transition:     all 0.2s;
+        }
+        .filter-btn:hover { color: var(--accent); border-color: var(--border); }
+        .filter-btn.active { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+        /* ── PROJECT GRID ────────────── */
+        .projects-grid {
+            display:               grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap:                   1.5rem;
+        }
+        .project-card {
+            background:    var(--surface);
+            border:        1px solid var(--border2);
+            border-radius: 12px;
+            overflow:      hidden;
+            transition:    border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            position:      relative;
+            display:       flex; flex-direction: column;
+        }
+        .project-card:hover {
+            border-color: rgba(0,212,255,0.25);
+            transform:    translateY(-5px);
+            box-shadow:   0 20px 50px rgba(0,0,0,0.4);
+        }
+        .project-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            transform:  scaleX(0); transform-origin: left; transition: transform 0.4s;
+        }
+        .project-card:hover::before { transform: scaleX(1); }
+
+        .project-image {
+            height:     180px;
+            background: var(--surface2);
+            display:    flex; align-items: center; justify-content: center;
+            font-size:  2.75rem; color: var(--text-dim);
+            position:   relative; overflow: hidden; transition: color 0.3s;
+        }
+        .project-image::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .project-card:hover .project-image       { color: var(--accent); }
+        .project-card:hover .project-image::after { opacity: 1; }
+
+        .project-status {
+            position:       absolute; top: 1rem; right: 1rem;
+            font-family:    var(--font-mono); font-size: 0.6rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            padding:        0.3rem 0.75rem; border-radius: 3px; z-index: 1;
+        }
+        .project-info { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+        .project-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
+        .project-tag {
+            font-family:    var(--font-mono); font-size: 0.6rem;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            padding:        0.25rem 0.6rem;
+            background:     var(--accent-glow); color: var(--accent);
+            border:         1px solid var(--border); border-radius: 3px;
+        }
+        .project-info h3 { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: 0.03em; margin-bottom: 0.6rem; }
+        .project-info p  { font-size: 0.875rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 1.25rem; flex: 1; }
+        .project-tech { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .tech-badge {
+            font-family:   var(--font-mono); font-size: 0.62rem;
+            padding:       0.25rem 0.6rem;
+            background:    var(--bg2); border: 1px solid var(--border2);
+            border-radius: 3px; color: var(--text-dim);
+        }
+        .project-links { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: auto; }
+        .project-link {
+            font-family:     var(--font-mono); font-size: 0.7rem;
+            letter-spacing:  0.08em; text-transform: uppercase;
+            padding:         0.6rem 1.2rem; border-radius: 4px;
+            text-decoration: none; transition: all 0.2s;
+            display:         inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .project-link.primary { background: var(--accent); color: var(--bg); font-weight: 700; border: none; }
+        .project-link.primary:hover { background: #33ddff; transform: translateY(-1px); }
+        .project-link.secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border2); }
+        .project-link.secondary:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+
+        /* ── MODALS ──────────────────── */
+        .modal-overlay {
+            display:         none;
+            position:        fixed; inset: 0;
+            background:      rgba(0,0,0,0.75);
+            z-index:         200;
+            align-items:     center;
+            justify-content: center;
+            padding:         2rem;
+            backdrop-filter: blur(6px);
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background:    var(--surface);
+            border:        1px solid var(--border2);
+            border-radius: 16px;
+            max-width:     640px;
+            width:         100%;
+            max-height:    90vh;
+            overflow-y:    auto;
+            padding:       2.5rem;
+            position:      relative;
+            animation:     fadeUp 0.35s ease;
+        }
+        .modal-box::before {
+            content: '';
+            position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+        .modal-close {
+            position:      absolute; top: 1.25rem; right: 1.25rem;
+            background:    var(--surface2); border: 1px solid var(--border2);
+            border-radius: 6px; color: var(--text-muted);
+            width:         32px; height: 32px; font-size: 0.85rem;
+            transition:    all 0.2s;
+        }
+        .modal-close:hover { color: var(--accent); border-color: var(--border); }
+        .modal-header { margin-bottom: 2rem; }
+        .modal-header h2 { font-family: var(--font-display); font-size: 2rem; letter-spacing: 0.04em; margin-bottom: 0.5rem; }
+        .modal-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .modal-section { margin-bottom: 1.75rem; }
+        .modal-section h4 { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 0.75rem; }
+        .modal-section p  { font-size: 0.875rem; color: var(--text-muted); line-height: 1.7; }
+        .modal-objectives { list-style: none; }
+        .modal-objectives li { font-size: 0.875rem; color: var(--text-muted); line-height: 1.7; padding-left: 1.25rem; position: relative; }
+        .modal-objectives li::before { content: '→'; position: absolute; left: 0; color: var(--accent); }
+        .modal-tech { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .modal-status-row { display: flex; gap: 0.5rem; }
+
+        /* ── TOAST ───────────────────── */
+        #doc-toast {
+            position:      fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
+            background:    var(--surface);
+            border:        1px solid var(--border2);
+            border-radius: 8px;
+            padding:       0.85rem 1.5rem;
+            display:       flex; align-items: center; gap: 0.75rem;
+            font-family:   var(--font-mono); font-size: 0.75rem;
+            color:         var(--text-muted);
+            z-index:       999;
+            opacity:       0;
+            transition:    all 0.35s cubic-bezier(0.16,1,0.3,1);
+            pointer-events: none;
+            white-space:   nowrap;
+        }
+        #doc-toast.show         { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #doc-toast.show.success { border-color: rgba(0,255,136,0.4); color: #00ff88; }
+        #doc-toast.show.pending { border-color: rgba(255,193,7,0.4);  color: #ffc107; }
+
+        @media (max-width: 600px) {
+            .projects-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header id="header">
+        <nav>
+            <a href="index.html" class="logo">Votre Nom</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="projets.html" class="active">Projets</a></li>
+                <li><a href="realisations.html">Réalisations</a></li>
+                <li><a href="veille.html">Veille</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button></li>
+            </ul>
+            <div class="burger" id="burger"><span></span><span></span><span></span></div>
+        </nav>
+    </header>
+
+    <!-- PAGE HERO -->
+    <div class="page-hero">
+        <div class="page-hero-inner">
+            <div class="breadcrumb">
+                <a href="index.html">Accueil</a><span>/</span><span>Projets</span>
+            </div>
+            <h1>Mes<br>Projets</h1>
+            <p>Découvrez les projets réalisés durant ma scolarité, de l'administration système et réseau à la cybersécurité.</p>
+        </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <section class="section">
+        <div class="container">
+
+            <div class="filters reveal">
+                <button class="filter-btn active" data-filter="all">Tous</button>
+                <button class="filter-btn" data-filter="reseau">Réseau</button>
+                <button class="filter-btn" data-filter="systeme">Système</button>
+                <button class="filter-btn" data-filter="securite">Sécurité</button>
+                <button class="filter-btn" data-filter="cloud">Cloud</button>
+                <button class="filter-btn" data-filter="dev">Développement</button>
+            </div>
+
+            <div class="projects-grid">
+
+                <!-- Portfolio -->
+                <div class="project-card dev reveal">
+                    <div class="project-status status-completed">Terminé</div>
+                    <div class="project-image"><i class="fas fa-laptop-code"></i></div>
+                    <div class="project-info">
+                        <div class="project-meta"><span class="project-tag">Développement</span></div>
+                        <h3>Portfolio</h3>
+                        <p>Conception et déploiement d'un portfolio web, hébergé sur mon Home-LAB.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">HTML / CSS</span>
+                            <span class="tech-badge">JavaScript</span>
+                            <span class="tech-badge">VS Code</span>
+                            <span class="tech-badge">GitHub</span>
+                            <span class="tech-badge">Nginx</span>
+                            <span class="tech-badge">Reverse-Proxy</span>
+                        </div>
+                        <div class="project-links">
+                            <button class="project-link primary" onclick="openModal('modal-portfolio')">Voir détails</button>
+                            <a href="https://github.com/VOTRE_GITHUB" target="_blank" class="project-link secondary">GitHub</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Home-LAB -->
+                <div class="project-card reseau securite reveal">
+                    <div class="project-status status-completed">Terminé</div>
+                    <div class="project-image"><i class="fas fa-shield-alt"></i></div>
+                    <div class="project-info">
+                        <div class="project-meta">
+                            <span class="project-tag">Réseau</span>
+                            <span class="project-tag">Sécurité</span>
+                            <span class="project-tag">Système</span>
+                        </div>
+                        <h3>Home-Lab</h3>
+                        <p>Création et mise en place d'un Home-Lab avec serveur ESXi, pare-feu pfSense et NAS.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">Serveur Home-Made</span>
+                            <span class="tech-badge">ESXi / vSphere</span>
+                            <span class="tech-badge">pfSense</span>
+                            <span class="tech-badge">Switch</span>
+                            <span class="tech-badge">NAS</span>
+                            <span class="tech-badge">Hardware</span>
+                        </div>
+                        <div class="project-links">
+                            <button class="project-link primary" onclick="openModal('modal-homelab')">Voir détails</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NextCloud -->
+                <div class="project-card cloud systeme reveal">
+                    <div class="project-status status-progress">En cours</div>
+                    <div class="project-image"><i class="fas fa-cloud"></i></div>
+                    <div class="project-info">
+                        <div class="project-meta">
+                            <span class="project-tag">Cloud</span>
+                            <span class="project-tag">Système</span>
+                        </div>
+                        <h3>NextCloud</h3>
+                        <p>Déploiement d'une instance NextCloud sur serveur Linux pour le stockage et le partage de fichiers en interne.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">NextCloud</span>
+                            <span class="tech-badge">Linux (Debian)</span>
+                            <span class="tech-badge">Apache</span>
+                            <span class="tech-badge">MariaDB</span>
+                            <span class="tech-badge">PHP</span>
+                        </div>
+                        <div class="project-links">
+                            <button class="project-link primary" onclick="openModal('modal-nextcloud')">Voir détails</button>
+                            <a href="doc_nextcloud.pdf" download class="project-link secondary doc-dl" data-name="NextCloud"><i class="fas fa-file-pdf"></i> Doc</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Windows Server -->
+                <div class="project-card systeme reveal">
+                    <div class="project-status status-completed">Terminé</div>
+                    <div class="project-image"><i class="fas fa-server"></i></div>
+                    <div class="project-info">
+                        <div class="project-meta"><span class="project-tag">Système</span></div>
+                        <h3>Windows Server 2022</h3>
+                        <p>Installation et configuration d'un serveur Windows Server 2022 avec Active Directory, DNS, DHCP et GPO.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">Windows Server 2022</span>
+                            <span class="tech-badge">Active Directory</span>
+                            <span class="tech-badge">GPO</span>
+                            <span class="tech-badge">DNS / DHCP</span>
+                            <span class="tech-badge">PowerShell</span>
+                        </div>
+                        <div class="project-links">
+                            <button class="project-link primary" onclick="openModal('modal-wserver')">Voir détails</button>
+                            <a href="doc_windows_server.pdf" download class="project-link secondary doc-dl" data-name="Windows Server 2022"><i class="fas fa-file-pdf"></i> Doc</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apache -->
+                <div class="project-card reseau systeme reveal">
+                    <div class="project-status status-completed">Terminé</div>
+                    <div class="project-image"><i class="fas fa-globe"></i></div>
+                    <div class="project-info">
+                        <div class="project-meta">
+                            <span class="project-tag">Réseau</span>
+                            <span class="project-tag">Système</span>
+                        </div>
+                        <h3>Serveur Web Apache</h3>
+                        <p>Configuration d'un serveur web Apache sur Linux avec DNS, certificat SSL et hébergement HTML.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">Linux (Debian)</span>
+                            <span class="tech-badge">Apache</span>
+                            <span class="tech-badge">SSL / HTTPS</span>
+                            <span class="tech-badge">DNS</span>
+                            <span class="tech-badge">HTML</span>
+                        </div>
+                        <div class="project-links">
+                            <button class="project-link primary" onclick="openModal('modal-apache')">Voir détails</button>
+                            <a href="doc_apache.pdf" download class="project-link secondary doc-dl" data-name="Apache"><i class="fas fa-file-pdf"></i> Doc</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bitwarden -->
+                <div class="project-card systeme securite reveal">
+                    <div class="project-status status-completed">Terminé</div>
+                    <div class="project-image"><i class="fas fa-lock"></i></div>
+                    <div class="project-info">
+                        <div class="project-meta">
+                            <span class="project-tag">Système</span>
+                            <span class="project-tag">Sécurité</span>
+                        </div>
+                        <h3>Bitwarden On-Prem</h3>
+                        <p>Déploiement d'un gestionnaire de mots de passe auto-hébergé avec Docker et Nginx sur Linux.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">Linux</span>
+                            <span class="tech-badge">Docker</span>
+                            <span class="tech-badge">Nginx</span>
+                            <span class="tech-badge">Authentification</span>
+                            <span class="tech-badge">Bash</span>
+                        </div>
+                        <div class="project-links">
+                            <button class="project-link primary" onclick="openModal('modal-bitwarden')">Voir détails</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="cta-inner reveal">
+            <div>
+                <h2>Intéressé par mes projets ?</h2>
+                <p>N'hésitez pas à me contacter pour discuter de mes réalisations ou pour toute collaboration.</p>
+            </div>
+            <div class="cta-buttons">
+                <a href="contact.html" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Me contacter</a>
+                <a href="realisations.html" class="btn btn-secondary"><i class="fas fa-trophy"></i> Mes compétences</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="logo-big">Votre Nom</div>
+                    <p>Étudiant en BACHELOR AIS, passionné par les systèmes, réseaux et la cybersécurité. Disponible pour CDI en Cybersécurité à partir de 2029.</p>
+                    <div class="footer-social">
+                        <a href="https://www.linkedin.com/in/VOTRE_PROFIL_LINKEDIN/" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://github.com/VOTRE_GITHUB" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="contact.html" class="social-btn" title="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Navigation</h4>
+                    <a href="index.html">Accueil</a>
+                    <a href="projets.html">Projets</a>
+                    <a href="realisations.html">Réalisations</a>
+                    <a href="veille.html">Veille</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Compétences</h4>
+                    <a href="realisations.html#systeme">Admin. Système</a>
+                    <a href="realisations.html#reseau">Admin. Réseau</a>
+                    <a href="realisations.html#securite">Cybersécurité</a>
+                    <a href="realisations.html#cloud">Cloud</a>
+                    <a href="realisations.html#dev">Automatisation</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <a href="https://www.linkedin.com/in/VOTRE_PROFIL_LINKEDIN/">LinkedIn</a>
+                    <a href="https://github.com/VOTRE_GITHUB">GitHub</a>
+                    <a href="contact.html">Formulaire</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Votre Nom — Portfolio BACHELOR AIS</p>
+                <p>Tous droits réservés</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="modal-portfolio">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-portfolio')"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2>Portfolio</h2>
+                <div class="modal-tags"><span class="project-tag">Développement</span></div>
+            </div>
+            <div class="modal-section">
+                <h4>Description</h4>
+                <p>Conception et développement d'un portfolio web complet pour présenter mes compétences, projets et expériences. Le site est responsive, supporte un thème clair/sombre et est déployé sur le Home-LAB via Nginx et Reverse-Proxy.</p>
+            </div>
+            <div class="modal-section">
+                <h4>Objectifs</h4>
+                <ul class="modal-objectives">
+                    <li>Créer une interface moderne et responsive</li>
+                    <li>Implémenter un système de thème clair/sombre persistant</li>
+                    <li>Déployer via GitHub et Nginx sur le Home-LAB</li>
+                    <li>Présenter les compétences, projets et expériences</li>
+                </ul>
+            </div>
+            <div class="modal-section">
+                <h4>Technologies</h4>
+                <div class="modal-tech">
+                    <span class="tech-badge">HTML / CSS</span>
+                    <span class="tech-badge">JavaScript</span>
+                    <span class="tech-badge">VS Code</span>
+                    <span class="tech-badge">GitHub</span>
+                    <span class="tech-badge">Nginx</span>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h4>Statut</h4>
+                <div class="modal-status-row"><span class="project-status status-completed" style="position:static">Terminé</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-homelab">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-homelab')"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2>Home-Lab</h2>
+                <div class="modal-tags">
+                    <span class="project-tag">Réseau</span>
+                    <span class="project-tag">Sécurité</span>
+                    <span class="project-tag">Système</span>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h4>Description</h4>
+                <p>Création d'une infrastructure réseau personnelle complète. Montage du serveur, installation de l'hyperviseur ESXi, configuration du pare-feu pfSense, d'un VPN WireGuard, d'un reverse proxy et d'un NAS.</p>
+            </div>
+            <div class="modal-section">
+                <h4>Objectifs</h4>
+                <ul class="modal-objectives">
+                    <li>Monter et configurer un serveur physique</li>
+                    <li>Installer VMware ESXi et gérer les VMs</li>
+                    <li>Configurer pfSense (VLAN, NAT, règles de pare-feu)</li>
+                    <li>Mettre en place un VPN WireGuard et un reverse proxy</li>
+                    <li>Déployer un NAS pour le stockage</li>
+                </ul>
+            </div>
+            <div class="modal-section">
+                <h4>Technologies</h4>
+                <div class="modal-tech">
+                    <span class="tech-badge">ESXi / vSphere</span>
+                    <span class="tech-badge">pfSense</span>
+                    <span class="tech-badge">WireGuard</span>
+                    <span class="tech-badge">Nginx Proxy Manager</span>
+                    <span class="tech-badge">TrueNAS</span>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h4>Statut</h4>
+                <div class="modal-status-row"><span class="project-status status-completed" style="position:static">Terminé</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-nextcloud">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-nextcloud')"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2>NextCloud</h2>
+                <div class="modal-tags"><span class="project-tag">Cloud</span><span class="project-tag">Système</span></div>
+            </div>
+            <div class="modal-section">
+                <h4>Description</h4>
+                <p>Déploiement d'une solution de stockage cloud auto-hébergée via NextCloud sur un serveur Linux Debian avec Apache, MariaDB, PHP et sécurisation HTTPS.</p>
+            </div>
+            <div class="modal-section">
+                <h4>Objectifs</h4>
+                <ul class="modal-objectives">
+                    <li>Installer et configurer NextCloud sur Debian</li>
+                    <li>Mettre en place Apache, PHP et MariaDB</li>
+                    <li>Sécuriser l'accès avec un certificat SSL</li>
+                    <li>Gérer les utilisateurs et les droits d'accès</li>
+                </ul>
+            </div>
+            <div class="modal-section">
+                <h4>Technologies</h4>
+                <div class="modal-tech">
+                    <span class="tech-badge">NextCloud</span>
+                    <span class="tech-badge">Linux (Debian)</span>
+                    <span class="tech-badge">Apache</span>
+                    <span class="tech-badge">MariaDB</span>
+                    <span class="tech-badge">PHP</span>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h4>Statut</h4>
+                <div class="modal-status-row"><span class="project-status status-progress" style="position:static">En cours</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-wserver">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-wserver')"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2>Windows Server 2022</h2>
+                <div class="modal-tags"><span class="project-tag">Système</span></div>
+            </div>
+            <div class="modal-section">
+                <h4>Description</h4>
+                <p>Installation et configuration complète d'un serveur Windows Server 2022 avec Active Directory, GPO, DNS et DHCP dans un environnement virtualisé.</p>
+            </div>
+            <div class="modal-section">
+                <h4>Objectifs</h4>
+                <ul class="modal-objectives">
+                    <li>Installer Windows Server 2022 en machine virtuelle</li>
+                    <li>Configurer un domaine Active Directory</li>
+                    <li>Créer et gérer des utilisateurs, groupes et UO</li>
+                    <li>Déployer des GPO pour la gestion des postes</li>
+                    <li>Configurer DNS et DHCP</li>
+                    <li>Automatiser des tâches via PowerShell</li>
+                </ul>
+            </div>
+            <div class="modal-section">
+                <h4>Technologies</h4>
+                <div class="modal-tech">
+                    <span class="tech-badge">Windows Server 2022</span>
+                    <span class="tech-badge">Active Directory</span>
+                    <span class="tech-badge">GPO</span>
+                    <span class="tech-badge">DNS / DHCP</span>
+                    <span class="tech-badge">PowerShell</span>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h4>Statut</h4>
+                <div class="modal-status-row"><span class="project-status status-completed" style="position:static">Terminé</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-apache">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-apache')"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2>Serveur Web Apache</h2>
+                <div class="modal-tags"><span class="project-tag">Réseau</span><span class="project-tag">Système</span></div>
+            </div>
+            <div class="modal-section">
+                <h4>Description</h4>
+                <p>Configuration d'un serveur web Apache sur Debian avec virtual hosts, enregistrement DNS et sécurisation SSL.</p>
+            </div>
+            <div class="modal-section">
+                <h4>Objectifs</h4>
+                <ul class="modal-objectives">
+                    <li>Installer et configurer Apache sur Debian</li>
+                    <li>Mettre en place des virtual hosts</li>
+                    <li>Configurer la résolution DNS locale</li>
+                    <li>Sécuriser les échanges via SSL/HTTPS</li>
+                </ul>
+            </div>
+            <div class="modal-section">
+                <h4>Technologies</h4>
+                <div class="modal-tech">
+                    <span class="tech-badge">Linux (Debian)</span>
+                    <span class="tech-badge">Apache</span>
+                    <span class="tech-badge">SSL / HTTPS</span>
+                    <span class="tech-badge">DNS</span>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h4>Statut</h4>
+                <div class="modal-status-row"><span class="project-status status-completed" style="position:static">Terminé</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-bitwarden">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-bitwarden')"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2>Bitwarden On-Prem</h2>
+                <div class="modal-tags"><span class="project-tag">Système</span><span class="project-tag">Sécurité</span></div>
+            </div>
+            <div class="modal-section">
+                <h4>Description</h4>
+                <p>Déploiement d'un gestionnaire de mots de passe Bitwarden auto-hébergé via Docker sur Linux, sécurisé derrière Nginx avec authentification MFA.</p>
+            </div>
+            <div class="modal-section">
+                <h4>Objectifs</h4>
+                <ul class="modal-objectives">
+                    <li>Déployer Bitwarden via Docker Compose</li>
+                    <li>Configurer Nginx en reverse proxy</li>
+                    <li>Sécuriser l'accès avec un certificat SSL</li>
+                    <li>Activer l'authentification MFA</li>
+                </ul>
+            </div>
+            <div class="modal-section">
+                <h4>Technologies</h4>
+                <div class="modal-tech">
+                    <span class="tech-badge">Linux</span>
+                    <span class="tech-badge">Docker</span>
+                    <span class="tech-badge">Nginx</span>
+                    <span class="tech-badge">Bitwarden</span>
+                    <span class="tech-badge">Bash</span>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h4>Statut</h4>
+                <div class="modal-status-row"><span class="project-status status-completed" style="position:static">Terminé</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Toast -->
+    <div id="doc-toast"><i class="fas fa-file-pdf"></i><span id="doc-toast-msg"></span></div>
+
+    <script src="js/main.js"></script>
+    <script>
+        /* ── Filters ── */
+        document.querySelectorAll('.filter-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                var filter = this.dataset.filter;
+                document.querySelectorAll('.project-card').forEach(function (card) {
+                    var show = filter === 'all' || card.classList.contains(filter);
+                    card.style.display = show ? '' : 'none';
+                });
+            });
+        });
+
+        /* ── Modals ── */
+        function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+        document.querySelectorAll('.modal-overlay').forEach(function (o) {
+            o.addEventListener('click', function (e) { if (e.target === this) closeModal(this.id); });
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(function (m) { closeModal(m.id); });
+        });
+
+        /* ── PDF Toast ── */
+        var toastTimer;
+        function showToast(msg, type) {
+            var toast = document.getElementById('doc-toast');
+            clearTimeout(toastTimer);
+            document.getElementById('doc-toast-msg').textContent = msg;
+            toast.className = 'show ' + type;
+            toastTimer = setTimeout(function () { toast.className = ''; }, 3500);
+        }
+        document.querySelectorAll('.doc-dl').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                var name = this.getAttribute('data-name');
+                fetch(this.getAttribute('href'), { method: 'HEAD' })
+                    .then(function (res) { if (res.ok) showToast('Téléchargement de ' + name + '…', 'success'); else throw new Error(); })
+                    .catch(function () { e.preventDefault(); showToast(name + ' — bientôt disponible', 'pending'); });
+            });
+        });
+    </script>
+</body>
+</html>

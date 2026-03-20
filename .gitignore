@@ -1,0 +1,18 @@
+# CV personnel — ne pas publier
+*.pdf
+
+# Fichier de vérification Google Search Console
+google*.html
+
+# Fichiers sensibles
+.env
+*.key
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+*.swp

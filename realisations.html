@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script>
+        (function () {
+            var t = localStorage.getItem('kb-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+
+    <title>Réalisations — Votre Nom</title>
+    <meta name="description" content="Compétences techniques, certifications et expériences professionnelles de Votre Nom.">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* ── STATUS COLORS ───────────── */
+        .status-obtained  { background: rgba(0,255,136,0.08); color: #00ff88; border: 1px solid rgba(0,255,136,0.25); }
+        .status-progress  { background: rgba(255,193,7,0.08);  color: #ffc107; border: 1px solid rgba(255,193,7,0.25); }
+
+        /* ── SKILLS GRID ─────────────── */
+        .skills-grid {
+            display:               grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap:                   1px;
+            background:            var(--border2);
+            border-radius:         12px;
+            overflow:              hidden;
+            border:                1px solid var(--border2);
+        }
+        .skill-card {
+            background: var(--surface);
+            padding:    2rem 1.75rem;
+            position:   relative; overflow: hidden;
+            transition: background 0.3s;
+        }
+        .skill-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            transform:  scaleX(0); transform-origin: left; transition: transform 0.4s;
+        }
+        .skill-card:hover                { background: var(--surface2); }
+        .skill-card:hover::before        { transform: scaleX(1); }
+        .skill-card-num { font-family: var(--font-display); font-size: 3.5rem; color: var(--border2); line-height: 1; margin-bottom: 1rem; transition: color 0.3s; }
+        .skill-card:hover .skill-card-num { color: rgba(0,212,255,0.08); }
+        .skill-icon {
+            width: 42px; height: 42px;
+            background: var(--accent-glow); border: 1px solid var(--border); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent); font-size: 1rem; margin-bottom: 1.25rem;
+        }
+        .skill-card h3 { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: 0.04em; margin-bottom: 0.6rem; }
+        .skill-card p  { font-size: 0.82rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 1.25rem; }
+        .skill-items   { list-style: none; margin-bottom: 1.5rem; }
+        .skill-items li {
+            font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
+            padding: 0.3rem 0 0.3rem 1rem; position: relative;
+            border-bottom: 1px solid var(--border2); transition: color 0.2s;
+        }
+        .skill-items li:last-child { border-bottom: none; }
+        .skill-items li::before { content: '▹'; position: absolute; left: 0; color: var(--accent); }
+        .skill-card:hover .skill-items li { color: var(--text-muted); }
+        .skill-bar      { height: 2px; background: var(--border2); border-radius: 1px; overflow: hidden; }
+        .skill-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent2), var(--accent));
+            border-radius: 1px;
+            width: 0; transition: width 1.2s ease-out;
+        }
+
+        /* ── CERTIFICATIONS ──────────── */
+        .cert-grid {
+            display:               grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap:                   1.5rem;
+        }
+        .cert-card {
+            background:    var(--surface);
+            border:        1px solid var(--border2);
+            border-radius: 12px;
+            padding:       2rem;
+            text-align:    center;
+            transition:    border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            position:      relative; overflow: hidden;
+        }
+        .cert-card:hover { border-color: rgba(0,212,255,0.25); transform: translateY(-4px); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
+        .cert-card::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+            background: linear-gradient(to top, var(--accent-glow), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .cert-card:hover::after { opacity: 1; }
+        .cert-badge {
+            width: 64px; height: 64px;
+            background: var(--accent-glow); border: 1px solid var(--border); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.25rem; color: var(--accent); font-size: 1.4rem;
+        }
+        .cert-card h3  { font-family: var(--font-display); font-size: 1.4rem; letter-spacing: 0.04em; margin-bottom: 0.4rem; }
+        .cert-org      { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+        .cert-date     { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+        .cert-sub      { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 1rem; }
+        .cert-status   { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.75rem; border-radius: 3px; display: inline-block; }
+
+        /* ── TIMELINE ────────────────── */
+        .timeline { position: relative; padding-left: 2.5rem; }
+        .timeline::before {
+            content: '';
+            position: absolute; left: 0; top: 8px; bottom: 8px; width: 1px;
+            background: linear-gradient(to bottom, var(--accent), rgba(0,212,255,0.1));
+        }
+        .timeline-item {
+            position:      relative;
+            margin-bottom: 1.5rem;
+            background:    var(--surface);
+            border:        1px solid var(--border2);
+            border-radius: 10px;
+            padding:       1.75rem 2rem;
+            transition:    border-color 0.3s, transform 0.3s;
+        }
+        .timeline-item:hover { border-color: rgba(0,212,255,0.2); transform: translateX(4px); }
+        .timeline-item::before {
+            content: '';
+            position:     absolute; left: -2.85rem; top: 1.9rem;
+            width:        10px; height: 10px; border-radius: 50%;
+            background:   var(--accent); border: 2px solid var(--bg);
+            box-shadow:   0 0 0 2px var(--accent2);
+        }
+        .timeline-date      { font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+        .timeline-title-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+        .timeline-title     { font-family: var(--font-display); font-size: 1.35rem; letter-spacing: 0.03em; }
+        .timeline-company   { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.85rem; }
+        .timeline-desc      { font-size: 0.875rem; color: var(--text-muted); line-height: 1.75; margin-bottom: 1.25rem; }
+        .timeline-tags      { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .timeline-tag {
+            font-family: var(--font-mono); font-size: 0.62rem;
+            padding:     0.25rem 0.6rem;
+            background:  var(--bg2); border: 1px solid var(--border2); border-radius: 3px;
+            color:       var(--text-dim); transition: all 0.2s;
+        }
+        .timeline-item:hover .timeline-tag { border-color: var(--border); color: var(--text-muted); }
+
+        /* Info tooltip */
+        .info-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 22px; height: 22px; min-width: 22px;
+            background: var(--surface2); border: 1px solid var(--border2);
+            border-radius: 50%; color: var(--text-dim); font-size: 0.65rem;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .info-btn:hover, .info-btn.open { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+        .info-tooltip {
+            display:    none;
+            position:   fixed;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1rem 1.25rem; width: 280px;
+            z-index:    9999; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+        .info-tooltip.open { display: block; }
+        .tooltip-header { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.75rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border2); }
+        .tooltip-item  { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.45rem; }
+        .tooltip-item:last-child { margin-bottom: 0; }
+        .tooltip-icon  { width: 14px; color: var(--text-dim); font-size: 0.65rem; flex-shrink: 0; }
+        .tooltip-label { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim); white-space: nowrap; }
+        .tooltip-value { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* ── SOFT SKILLS ─────────────── */
+        .soft-grid {
+            display:               grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap:                   1.5rem;
+        }
+        .soft-card {
+            background:    var(--surface);
+            border:        1px solid var(--border2);
+            border-radius: 10px;
+            padding:       1.75rem;
+            transition:    border-color 0.3s, transform 0.3s;
+        }
+        .soft-card:hover { border-color: var(--border); transform: translateY(-3px); }
+        .soft-icon { width: 40px; height: 40px; background: var(--accent-glow); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 0.9rem; margin-bottom: 1rem; }
+        .soft-card h3 { font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 0.04em; margin-bottom: 0.5rem; }
+        .soft-card p  { font-size: 0.84rem; color: var(--text-muted); line-height: 1.7; }
+
+        /* ── LANGUAGES ───────────────── */
+        .lang-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; max-width: 700px; }
+        .lang-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 1.75rem; transition: border-color 0.3s; }
+        .lang-card:hover { border-color: var(--border); }
+        .lang-icon { width: 40px; height: 40px; background: var(--accent-glow); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 0.9rem; margin-bottom: 1rem; }
+        .lang-card h3 { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+        .lang-card p  { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .lang-bar     { height: 2px; background: var(--border2); border-radius: 1px; overflow: hidden; }
+        .lang-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 1px; width: 0; transition: width 1.2s ease-out; }
+
+        /* ── RESPONSIVE ──────────────── */
+        @media (max-width: 1000px) { .skills-grid { grid-template-columns: repeat(2, 1fr); } .soft-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px)  { .cert-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 600px)  { .skills-grid { grid-template-columns: 1fr; } .cert-grid { grid-template-columns: 1fr; } .soft-grid { grid-template-columns: 1fr; } .lang-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header id="header">
+        <nav>
+            <a href="index.html" class="logo">Votre Nom</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="projets.html">Projets</a></li>
+                <li><a href="realisations.html" class="active">Réalisations</a></li>
+                <li><a href="veille.html">Veille</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button></li>
+            </ul>
+            <div class="burger" id="burger"><span></span><span></span><span></span></div>
+        </nav>
+    </header>
+
+    <!-- PAGE HERO -->
+    <div class="page-hero">
+        <div class="page-hero-inner">
+            <div class="breadcrumb">
+                <a href="index.html">Accueil</a><span>/</span><span>Réalisations</span>
+            </div>
+            <h1>Mes<br>Réalisations</h1>
+            <p>Compétences techniques, certifications et expériences professionnelles acquises au fil du parcours.</p>
+        </div>
+    </div>
+
+    <!-- COMPÉTENCES -->
+    <section class="section" id="competences">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-tag">Savoir-faire</p>
+                <h2 class="section-title">Compétences Techniques</h2>
+            </div>
+            <div class="skills-grid reveal">
+                <div class="skill-card" id="reseau">
+                    <div class="skill-card-num">01</div>
+                    <div class="skill-icon"><i class="fas fa-network-wired"></i></div>
+                    <h3>Administration Réseau</h3>
+                    <p>Configuration et maintenance d'infrastructures réseau complexes.</p>
+                    <ul class="skill-items">
+                        <li>OSI / TCP-IP / Subnetting</li>
+                        <li>Cisco, SonicWall, Fortinet</li>
+                        <li>VLAN, OSPF, NAT, VPN</li>
+                        <li>Wireshark, Analyse réseau</li>
+                    </ul>
+                    <div class="skill-bar"><div class="skill-bar-fill" style="--target-width:90%"></div></div>
+                </div>
+                <div class="skill-card" id="systeme">
+                    <div class="skill-card-num">02</div>
+                    <div class="skill-icon"><i class="fas fa-server"></i></div>
+                    <h3>Administration Système</h3>
+                    <p>Installation, configuration et maintenance des serveurs.</p>
+                    <ul class="skill-items">
+                        <li>Windows Server 2012–2025</li>
+                        <li>Debian / Ubuntu / CentOS</li>
+                        <li>Active Directory, GPO, DHCP/DNS</li>
+                        <li>Microsoft 365, Entra ID, Intune</li>
+                    </ul>
+                    <div class="skill-bar"><div class="skill-bar-fill" style="--target-width:90%"></div></div>
+                </div>
+                <div class="skill-card" id="dev">
+                    <div class="skill-card-num">03</div>
+                    <div class="skill-icon"><i class="fas fa-code"></i></div>
+                    <h3>Automatisation</h3>
+                    <p>Scripts et automatisation des tâches d'administration.</p>
+                    <ul class="skill-items">
+                        <li>Bash / Shell Scripting</li>
+                        <li>PowerShell</li>
+                        <li>Python (bases)</li>
+                        <li>HTML / CSS / JavaScript</li>
+                    </ul>
+                    <div class="skill-bar"><div class="skill-bar-fill" style="--target-width:70%"></div></div>
+                </div>
+                <div class="skill-card" id="virtualisation">
+                    <div class="skill-card-num">04</div>
+                    <div class="skill-icon"><i class="fas fa-cube"></i></div>
+                    <h3>Virtualisation</h3>
+                    <p>Déploiement et gestion d'environnements virtualisés.</p>
+                    <ul class="skill-items">
+                        <li>VMware ESXi / vSphere</li>
+                        <li>Hyper-V</li>
+                        <li>Docker / Conteneurisation</li>
+                        <li>VirtualBox, Proxmox</li>
+                    </ul>
+                    <div class="skill-bar"><div class="skill-bar-fill" style="--target-width:85%"></div></div>
+                </div>
+                <div class="skill-card" id="securite">
+                    <div class="skill-card-num">05</div>
+                    <div class="skill-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Cybersécurité</h3>
+                    <p>Sécurisation des systèmes et analyse des vulnérabilités.</p>
+                    <ul class="skill-items">
+                        <li>pfSense, Pare-feu, IDS/IPS</li>
+                        <li>Nmap, Wireshark, Audit</li>
+                        <li>CVE, Gestion des accès</li>
+                        <li>Sauvegarde, Supervision</li>
+                    </ul>
+                    <div class="skill-bar"><div class="skill-bar-fill" style="--target-width:80%"></div></div>
+                </div>
+                <div class="skill-card" id="cloud">
+                    <div class="skill-card-num">06</div>
+                    <div class="skill-icon"><i class="fas fa-cloud"></i></div>
+                    <h3>Support IT & Cloud</h3>
+                    <p>Support utilisateur et services cloud Microsoft.</p>
+                    <ul class="skill-items">
+                        <li>Microsoft 365, Azure</li>
+                        <li>GLPI, Jira, Eucaldima</li>
+                        <li>Maintenance matérielle</li>
+                        <li>Masterisation, Déploiement</li>
+                    </ul>
+                    <div class="skill-bar"><div class="skill-bar-fill" style="--target-width:85%"></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CERTIFICATIONS -->
+    <section class="section section-alt">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-tag">Diplômes</p>
+                <h2 class="section-title">Diplômes & Certifications</h2>
+            </div>
+            <div class="cert-grid">
+                <div class="cert-card reveal">
+                    <div class="cert-badge"><i class="fas fa-certificate"></i></div>
+                    <h3>Certification PIX</h3>
+                    <p class="cert-org">PIX — Compétences Numériques</p>
+                    <p class="cert-date">Obtenue en Juin 2024</p>
+                    <p class="cert-sub">Code : VOTRE_CODE_PIX</p>
+                    <span class="cert-status status-obtained">Certifié</span>
+                </div>
+                <div class="cert-card reveal">
+                    <div class="cert-badge"><i class="fas fa-graduation-cap"></i></div>
+                    <h3>Baccalauréat Pro</h3>
+                    <p class="cert-org">Votre Lycée — Votre Ville</p>
+                    <p class="cert-date">Obtenu en Juillet 2024</p>
+                    <p class="cert-sub">Systèmes numériques — Spécialité RISC</p>
+                    <span class="cert-status status-obtained">Obtenu</span>
+                </div>
+                <div class="cert-card reveal">
+                    <div class="cert-badge"><i class="fas fa-laptop-code"></i></div>
+                    <h3>BTS SIO SISR</h3>
+                    <p class="cert-org">Votre Lycée — Votre Ville</p>
+                    <p class="cert-date">En cours — Fin prévue 2026</p>
+                    <p class="cert-sub">Services Informatiques — option SISR</p>
+                    <span class="cert-status status-progress">En cours</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXPÉRIENCE -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-tag">Parcours</p>
+                <h2 class="section-title">Expérience Professionnelle</h2>
+            </div>
+            <div class="timeline reveal">
+
+                <div class="timeline-item">
+                    <div class="timeline-date">Mars 2025 — Mai 2025</div>
+                    <div class="timeline-title-row">
+                        <span class="timeline-title">Technicien Support Hotline Logiciel</span>
+                    </div>
+                    <p class="timeline-company">ENTREPRISE_STAGE (STAGE) — Ville (Code Postal)</p>
+                    <p class="timeline-desc">Installation, réinstallation et migration des logiciels ENTREPRISE_STAGE. Configuration réseau des machines, rédaction de documentation technique, suivi et résolution d'incidents via SIS, gestion des licences.</p>
+                    <div class="timeline-tags">
+                        <span class="timeline-tag">Support logiciel</span>
+                        <span class="timeline-tag">Configuration réseau</span>
+                        <span class="timeline-tag">Documentation</span>
+                        <span class="timeline-tag">SIS</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">Janvier 2026 — Mars 2026</div>
+                    <div class="timeline-title-row">
+                        <span class="timeline-title">Stagiaire — Support informatique</span>
+                    </div>
+                    <p class="timeline-company">ENTREPRISE_STAGE / SCAPRIM — Ville</p>
+                    <p class="timeline-desc">Stage de 8 semaines axé sur le support informatique. Support utilisateur, maintenance du parc informatique et assistance technique auprès des collaborateurs.</p>
+                    <div class="timeline-tags">
+                        <span class="timeline-tag">Support informatique</span>
+                        <span class="timeline-tag">Assistance utilisateur</span>
+                        <span class="timeline-tag">Maintenance parc IT</span>
+                        <span class="timeline-tag">Dépannage</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">Janvier 2025 — Mars 2025</div>
+                    <div class="timeline-title-row">
+                        <span class="timeline-title">Stagiaire — Gestion du parc informatique</span>
+                    </div>
+                    <p class="timeline-company">ENTREPRISE_STAGE (Filiale de la Groupe Bancaire) — Ville</p>
+                    <p class="timeline-desc">Stage de 5 semaines axé sur la gestion du parc informatique. Masterisation de PC, installation de postes de travail et gestion des tickets via Eucaldima.</p>
+                    <div class="timeline-tags">
+                        <span class="timeline-tag">Masterisation PC</span>
+                        <span class="timeline-tag">Installation poste</span>
+                        <span class="timeline-tag">Eucaldima</span>
+                        <span class="timeline-tag">Windows</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">Janvier 2022 — Février 2022</div>
+                    <div class="timeline-title-row">
+                        <span class="timeline-title">Technicien Fibre Optique</span>
+                    </div>
+                    <p class="timeline-company">ENTREPRISE_STAGE (STAGE) — Ville</p>
+                    <p class="timeline-desc">Infrastructure fibre optique : tirage et soudure de câbles optiques, mise en place complète de liaisons pour assurer une connectivité optimale.</p>
+                    <div class="timeline-tags">
+                        <span class="timeline-tag">Fibre optique</span>
+                        <span class="timeline-tag">Câblage</span>
+                        <span class="timeline-tag">Soudure</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">Mai 2021 — Juillet 2021</div>
+                    <div class="timeline-title-row">
+                        <span class="timeline-title">Technicien système et réseau</span>
+                    </div>
+                    <p class="timeline-company">ENTREPRISE_STAGE (STAGE) — Ville</p>
+                    <p class="timeline-desc">Configuration, installation et maintenance des équipements réseau (routeurs, commutateurs, pare-feu). Dépannage et résolution rapide des problèmes liés au réseau.</p>
+                    <div class="timeline-tags">
+                        <span class="timeline-tag">Réseau</span>
+                        <span class="timeline-tag">Équipements</span>
+                        <span class="timeline-tag">Dépannage</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- SOFT SKILLS -->
+    <section class="section section-alt">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-tag">Savoir-être</p>
+                <h2 class="section-title">Compétences Transversales</h2>
+            </div>
+            <div class="soft-grid reveal">
+                <div class="soft-card">
+                    <div class="soft-icon"><i class="fas fa-lightbulb"></i></div>
+                    <h3>Curiosité</h3>
+                    <p>Curiosité naturelle et soif d'apprendre. Toujours à l'affût des nouvelles technologies et meilleures pratiques IT.</p>
+                </div>
+                <div class="soft-card">
+                    <div class="soft-icon"><i class="fas fa-users"></i></div>
+                    <h3>Travail en équipe</h3>
+                    <p>Capacité à collaborer avec différents profils, partager les connaissances et contribuer au succès collectif.</p>
+                </div>
+                <div class="soft-card">
+                    <div class="soft-icon"><i class="fas fa-comments"></i></div>
+                    <h3>Communication</h3>
+                    <p>Sens de la communication pour expliquer clairement des concepts techniques et assurer un support de qualité.</p>
+                </div>
+                <div class="soft-card">
+                    <div class="soft-icon"><i class="fas fa-user-check"></i></div>
+                    <h3>Autonomie</h3>
+                    <p>Capacité à travailler de manière autonome, prendre des initiatives et gérer efficacement mes priorités.</p>
+                </div>
+                <div class="soft-card">
+                    <div class="soft-icon"><i class="fas fa-brain"></i></div>
+                    <h3>Gestion du stress</h3>
+                    <p>Capacité à rester calme et efficace sous pression, notamment lors de la résolution d'incidents critiques.</p>
+                </div>
+                <div class="soft-card">
+                    <div class="soft-icon"><i class="fas fa-handshake"></i></div>
+                    <h3>Sérieux & Motivation</h3>
+                    <p>Approche sérieuse et professionnelle avec une forte motivation pour progresser dans le domaine IT.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LANGUES -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-tag">Communication</p>
+                <h2 class="section-title">Langues</h2>
+            </div>
+            <div class="lang-grid reveal">
+                <div class="lang-card">
+                    <div class="lang-icon"><i class="fas fa-flag"></i></div>
+                    <h3>Français</h3>
+                    <p>Langue maternelle — Niveau C2</p>
+                    <div class="lang-bar"><div class="lang-bar-fill" style="--target-width:100%"></div></div>
+                </div>
+                <div class="lang-card">
+                    <div class="lang-icon"><i class="fas fa-globe"></i></div>
+                    <h3>Anglais</h3>
+                    <p>Niveau intermédiaire B2 — Documentation technique</p>
+                    <div class="lang-bar"><div class="lang-bar-fill" style="--target-width:60%"></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="cta-inner reveal">
+            <div>
+                <h2>Disponible pour CDI 2029</h2>
+                <p>Étudiant sérieux et motivé en BACHELOR AIS, ouvert aux opportunités en Cybersécurité ou administration d'infrastructure à partir de 2029.</p>
+            </div>
+            <div class="cta-buttons">
+                <a href="contact.html" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Me contacter</a>
+                <a href="projets.html" class="btn btn-secondary"><i class="fas fa-folder-open"></i> Mes projets</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="logo-big">Votre Nom</div>
+                    <p>Étudiant en BACHELOR AIS, passionné par les systèmes, réseaux et la cybersécurité. Disponible pour CDI en Cybersécurité à partir de 2029.</p>
+                    <div class="footer-social">
+                        <a href="https://www.linkedin.com/in/VOTRE_PROFIL_LINKEDIN/" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://github.com/VOTRE_GITHUB" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="contact.html" class="social-btn" title="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Navigation</h4>
+                    <a href="index.html">Accueil</a>
+                    <a href="projets.html">Projets</a>
+                    <a href="realisations.html">Réalisations</a>
+                    <a href="veille.html">Veille</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Compétences</h4>
+                    <a href="#systeme">Admin. Système</a>
+                    <a href="#reseau">Admin. Réseau</a>
+                    <a href="#securite">Cybersécurité</a>
+                    <a href="#cloud">Cloud</a>
+                    <a href="#dev">Automatisation</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <a href="https://www.linkedin.com/in/VOTRE_PROFIL_LINKEDIN/">LinkedIn</a>
+                    <a href="https://github.com/VOTRE_GITHUB">GitHub</a>
+                    <a href="contact.html">Formulaire</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Votre Nom — Portfolio BACHELOR AIS</p>
+                <p>Tous droits réservés</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        /* ── Animate bars on scroll ── */
+        var barObs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.style.width = getComputedStyle(entry.target).getPropertyValue('--target-width') || '100%';
+                    barObs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.3 });
+        document.querySelectorAll('.skill-bar-fill, .lang-bar-fill').forEach(function (el) { barObs.observe(el); });
+    </script>
+</body>
+</html>
